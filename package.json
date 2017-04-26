@@ -12,7 +12,8 @@
   "keywords": [],
   "author": "Fedor Indutny <fedor@indutny.com> (http://darksi.de/)",
   "license": "MIT",
-  "dependencies": {
-    "mocha": "^3.3.0"
+  "devDependencies": {
+    "mocha": "^3.3.0",
+    "split": "^1.0.0"
   }
 }
