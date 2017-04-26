@@ -1,13 +1,17 @@
 'use strict';
 
+const DEFAULT_MAX_DEPTH = 4;
+
 function Link(from, to, depth) {
   this.from = from;
   this.to = to;
-  this.index = depth;
+  this.depth = depth;
 }
 
 function Graph(root, options) {
-  this.options = options || {};
+  this.options = Object.assign({
+    maxDepth: DEFAULT_MAX_DEPTH
+  }, options);
   this.root = root;
 
   this.child = new Map();
@@ -16,6 +20,9 @@ function Graph(root, options) {
 module.exports = Graph;
 
 Graph.prototype._add = function _add(from, to, depth) {
+  if (depth > this.options.maxDepth)
+    return;
+
   const update = this.child.has(from);
 
   this.child.set(from, new Link(from, to, depth));
@@ -28,10 +35,10 @@ Graph.prototype._add = function _add(from, to, depth) {
   // Add dangling grand edges if they are present
   const edges = this.edges.get(from);
   for (let grand of edges.entries())
-    this.addLink(grand, from);
+    this.link(grand, from);
 };
 
-Graph.prototype.addLink = function addLink(from, to) {
+Graph.prototype.link = function link(from, to) {
   if (this.options.maximize) {
     if (!this.edges.has(to))
       this.edges.set(to, new Set());
@@ -56,9 +63,24 @@ Graph.prototype.addLink = function addLink(from, to) {
 
   // Case 3
   if (!old)
-    return this._add(from, to, old.depth + 1);
+    return this._add(from, to, target.depth + 1);
 
   // Case 4
   if (old.depth > target.depth + 1)
     return this._add(from, to, target.depth + 1);
+};
+
+Graph.prototype.build = function build(from) {
+  if (from === this.root)
+    return [];
+  if (!this.child.has(from))
+    return false;
+
+  const queue = [];
+  let current = from;
+  while (current !== this.root) {
+    queue.push(current);
+    current = this.child.get(current).to;
+  }
+  return queue;
 };
