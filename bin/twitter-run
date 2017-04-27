@@ -12,6 +12,18 @@ const buf = new Uint32Array(file.length >>> 2);
 for (let i = 0; i < buf.length; i++)
   buf[i] = file.readUInt32LE(i * 4);
 
+const users = [];
+{
+  const seen = new Set();
+  for (let i = 0; i < buf.length; i++) {
+    if (seen.has(buf[i]))
+      continue;
+
+    seen.add(buf[i]);
+    users.push(buf[i]);
+  }
+}
+
 function shuffle(buf) {
   const n = buf.length >>> 1;
   for (var i = 0; i < n - 1; i++) {
@@ -42,8 +54,8 @@ function test(from, to) {
 const buckets = new Array(MAX_DEPTH + 1).fill(0);
 
 for (;;) {
-  const from = buf[(Math.random() * buf.length) | 0];
-  const to = buf[(Math.random() * buf.length) | 0];
+  const from = users[(Math.random() * users.length) | 0];
+  const to = users[(Math.random() * users.length) | 0];
   if (from === to)
     continue;
 
