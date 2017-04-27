@@ -3,6 +3,8 @@
 
 const fs = require('fs');
 
+const MAX_DEPTH = 8;
+
 const Graph = require('../');
 
 const file = fs.readFileSync(process.argv[2]);
@@ -11,7 +13,9 @@ for (let i = 0; i < buf.length; i++)
   buf[i] = file.readUInt32LE(i * 4);
 
 function test(from, to) {
-  const g = new Graph(to);
+  const g = new Graph(to, {
+    maxDepth: MAX_DEPTH
+  });
 
   for (var i = 0; i < buf.length; i += 2)
     g.link(buf[i + 1], buf[i]);
@@ -19,7 +23,7 @@ function test(from, to) {
   return g.build(from);
 }
 
-const buckets = new Array(5).fill(0);
+const buckets = new Array(MAX_DEPTH + 1).fill(0);
 
 for (;;) {
   const from = buf[(Math.random() * buf.length) | 0];

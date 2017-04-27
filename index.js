@@ -1,6 +1,6 @@
 'use strict';
 
-const DEFAULT_MAX_DEPTH = 4;
+const DEFAULT_MAX_DEPTH = 5;
 
 function Link(from, to, depth) {
   this.from = from;
@@ -51,7 +51,7 @@ Graph.prototype.link = function link(from, to) {
 
   // Case 1 and Case 2
   if (to === this.root)
-    return this._add(from, to, 0);
+    return this._add(from, to, 1);
 
   const target = this.child.get(to);
 
