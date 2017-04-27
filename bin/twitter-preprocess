@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+'use strict';
+
+const split = require('split');
+
+const data = [];
+
+process.stdin.pipe(split()).on('data', (line) => {
+  const match = line.match(/^\s*(\d+)\s*(\d+)\s*$/);
+  if (!match)
+    return;
+
+  const user = match[1] | 0;
+  const follower = match[2] | 0;
+
+  data.push(user, follower);
+}).on('end', () => {
+  const buf = Buffer.alloc(data.length * 4);
+  for (var i = 0; i < data.length; i++) {
+    buf.writeUInt32LE(data[i], i * 4);
+  }
+
+  process.stdout.write(buf);
+});

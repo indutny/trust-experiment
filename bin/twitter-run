@@ -1,0 +1,33 @@
+#!/usr/bin/env node
+'use strict';
+
+const fs = require('fs');
+
+const Graph = require('../');
+
+const file = fs.readFileSync(process.argv[2]);
+const buf = new Uint32Array(file.length >>> 2);
+for (let i = 0; i < buf.length; i++)
+  buf[i] = file.readUInt32LE(i * 4);
+
+function test(from, to) {
+  const g = new Graph(to);
+
+  for (var i = 0; i < buf.length; i += 2)
+    g.link(buf[i + 1], buf[i]);
+
+  return g.build(from);
+}
+
+const buckets = new Array(5).fill(0);
+
+for (;;) {
+  const from = buf[(Math.random() * buf.length) | 0];
+  const to = buf[(Math.random() * buf.length) | 0];
+  if (from === to)
+    continue;
+
+  const route = test(from, to);
+  const length = route ? route.length : 0;
+  buckets[length]++;
+}
