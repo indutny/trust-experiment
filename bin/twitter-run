@@ -4,6 +4,7 @@
 const fs = require('fs');
 
 const MAX_DEPTH = 8;
+const PER_AUTHOR = 10000;
 
 const Graph = require('../');
 
@@ -38,7 +39,7 @@ function shuffle(buf) {
   }
 }
 
-function test(from, to) {
+function test(to) {
   shuffle(buf);
 
   const g = new Graph(to, {
@@ -48,19 +49,22 @@ function test(from, to) {
   for (var i = 0; i < buf.length; i += 2)
     g.link(buf[i + 1], buf[i]);
 
-  return g.build(from);
+  for (var i = 0; i < PER_AUTHOR; i++) {
+    const from = users[(Math.random() * users.length) | 0];
+    if (from === to)
+      continue;
+
+    const route = g.build(from);
+    const length = route ? route.length : 0;
+    buckets[length]++;
+  }
 }
 
 const buckets = new Array(MAX_DEPTH + 1).fill(0);
 
 for (;;) {
-  const from = users[(Math.random() * users.length) | 0];
   const to = users[(Math.random() * users.length) | 0];
-  if (from === to)
-    continue;
 
-  const route = test(from, to);
-  const length = route ? route.length : 0;
-  buckets[length]++;
+  const route = test(to);
   console.log(buckets.join(', '));
 }
