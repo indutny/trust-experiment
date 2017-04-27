@@ -30,4 +30,5 @@ for (;;) {
   const route = test(from, to);
   const length = route ? route.length : 0;
   buckets[length]++;
+  console.log(buckets.join(', '));
 }
