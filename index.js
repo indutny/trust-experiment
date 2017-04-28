@@ -29,15 +29,19 @@ Graph.prototype._add = function _add(from, to, depth) {
   if (!this.options.maximize && !update)
     return true;
 
+  const matches = [];
   for (let i = this.edges.length - 1; i >= 0; i--) {
     const link = this.edges[i];
-
     if (link.to !== from)
       continue;
 
     this.edges.splice(i, 1);
+    matches.push(link);
+  }
 
-    // Add dangling grand edges if they are present
+  // Add dangling grand edges if they are present
+  for (let i = 0; i < matches.length; i++) {
+    const link = matches[i];
     this.link(link.from, link.to);
   }
 
