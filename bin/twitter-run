@@ -4,6 +4,7 @@
 const fs = require('fs');
 
 const MAX_DEPTH = 8;
+const MAXIMIZE = 10000;
 const PER_AUTHOR = 10000;
 
 const Graph = require('../');
@@ -43,7 +44,8 @@ function test(to) {
   shuffle(buf);
 
   const g = new Graph(to, {
-    maxDepth: MAX_DEPTH
+    maxDepth: MAX_DEPTH,
+    maximize: MAXIMIZE
   });
 
   for (var i = 0; i < buf.length; i += 2)

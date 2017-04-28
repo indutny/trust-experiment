@@ -78,4 +78,25 @@ describe('Graph', () => {
     assert.equal(g.build(6), false);
     assert.deepEqual(g.build(5), [ 5, 4, 3, 2, 1 ]);
   });
+
+  it('should build tree from dangling links', () => {
+    const g = new Graph(0, { maximize: 4 });
+    // 0 - 1 - 2 - 3
+    g.link(2, 1);
+    g.link(3, 2);
+    g.link(1, 0);
+
+    assert.deepEqual(g.build(3), [ 3, 2, 1 ]);
+  });
+
+  it('should not build tree from dangling links when limit is reached', () => {
+    const g = new Graph(0, { maximize: 2 });
+    // 0 - 1 - 2 - 3
+    g.link(3, 2);
+    g.link(2, 1);
+    g.link(1, 0);
+
+    assert.equal(g.build(3), false);
+    assert.deepEqual(g.build(2), [ 2, 1 ]);
+  });
 });

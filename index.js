@@ -15,39 +15,38 @@ function Graph(root, options) {
   this.root = root;
 
   this.child = new Map();
-  this.edges = new Map();
+  this.edges = [];
 }
 module.exports = Graph;
 
 Graph.prototype._add = function _add(from, to, depth) {
   if (depth > this.options.maxDepth)
-    return;
+    return false;
 
   const update = this.child.has(from);
 
   this.child.set(from, new Link(from, to, depth));
   if (!this.options.maximize && !update)
-    return;
+    return true;
 
-  if (!this.edges.has(from))
-    return;
+  for (let i = this.edges.length - 1; i >= 0; i--) {
+    const link = this.edges[i];
 
-  // Add dangling grand edges if they are present
-  const edges = this.edges.get(from);
-  for (let grand of edges.entries())
-    this.link(grand, from);
-};
+    if (link.to !== from)
+      continue;
 
-Graph.prototype.link = function link(from, to) {
-  if (this.options.maximize) {
-    if (!this.edges.has(to))
-      this.edges.set(to, new Set());
-    this.edges.get(to).add(from);
+    // Add dangling grand edges if they are present
+    if (this._link(link.from, link.to))
+      this.edges.splice(i, 1);
   }
 
+  return true;
+};
+
+Graph.prototype._link = function _link(from, to) {
   // Case 0
   if (from === this.root)
-    return;
+    return false;
 
   // Case 1 and Case 2
   if (to === this.root)
@@ -57,7 +56,7 @@ Graph.prototype.link = function link(from, to) {
 
   // No dangling links
   if (!target)
-    return;
+    return false;
 
   const old = this.child.get(from);
 
@@ -68,6 +67,19 @@ Graph.prototype.link = function link(from, to) {
   // Case 4
   if (old.depth > target.depth + 1)
     return this._add(from, to, target.depth + 1);
+
+  return false;
+};
+
+Graph.prototype.link = function link(from, to) {
+  if (this._link(from, to))
+    return;
+
+  if (this.options.maximize) {
+    this.edges.unshift(new Link(from, to, -1));
+    if (this.edges.length >= this.options.maximize)
+      this.edges.pop();
+  }
 };
 
 Graph.prototype.build = function build(from) {
