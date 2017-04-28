@@ -92,7 +92,7 @@ Graph.prototype.link = function link(from, to) {
 
   if (this.options.maximize) {
     this.edges.unshift(new Link(from, to, -1));
-    if (this.edges.length >= this.options.maximize)
+    if (this.edges.length > this.options.maximize)
       this.edges.pop();
   }
 };
