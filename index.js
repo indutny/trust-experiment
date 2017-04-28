@@ -1,5 +1,7 @@
 'use strict';
 
+const binarySearch = require('binary-search');
+
 const DEFAULT_MAX_DEPTH = 5;
 
 function Link(from, to, depth) {
@@ -7,6 +9,14 @@ function Link(from, to, depth) {
   this.to = to;
   this.depth = depth;
 }
+
+Link.compare = function compare(a, b) {
+  return a.to - b.to;
+};
+
+Link.lookup = function lookup(a, needle) {
+  return a.to - needle;
+};
 
 function Graph(root, options) {
   this.options = Object.assign({
@@ -40,16 +50,21 @@ Graph.prototype._add = function _add(from, to, depth) {
   while (queue.length !== 0) {
     const inserted = queue.pop();
 
-    for (let i = this.edges.length - 1; i >= 0; i--) {
-      const link = this.edges[i];
+    const index = binarySearch(this.edges, inserted, Link.lookup);
+    if (index < 0)
+      continue;
+
+    for (let i = index; i < this.edges.length; i++) {
+      const link = this.edges[index];
       if (link.to !== inserted)
-        continue;
+        break;
 
       if (!this._link(link.from, link.to))
         continue;
 
       this.edges.splice(i, 1);
       queue.push(link.from);
+      break;
     }
   }
 
@@ -90,10 +105,12 @@ Graph.prototype.link = function link(from, to) {
   if (this._link(from, to))
     return;
 
-  if (this.options.maximize) {
-    this.edges.unshift(new Link(from, to, -1));
-    if (this.edges.length > this.options.maximize)
-      this.edges.pop();
+  if (this.options.maximize && this.edges.length < this.options.maximize) {
+    const dangling = new Link(from, to, -1);
+    let index = binarySearch(this.edges, dangling, Link.compare);
+    if (index < 0)
+      index = -1 - index;
+    this.edges.splice(index, 0, dangling);
   }
 };
 

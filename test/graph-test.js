@@ -96,8 +96,8 @@ describe('Graph', () => {
   it('should not build tree from dangling links when limit is reached', () => {
     const g = new Graph(0, { maximize: 1 });
     // 0 - 1 - 2 - 3
-    g.link(3, 2);
     g.link(2, 1);
+    g.link(3, 2);
     g.link(1, 0);
 
     assert.equal(g.build(3), false);
