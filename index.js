@@ -35,9 +35,10 @@ Graph.prototype._add = function _add(from, to, depth) {
     if (link.to !== from)
       continue;
 
+    this.edges.splice(i, 1);
+
     // Add dangling grand edges if they are present
-    if (this._link(link.from, link.to))
-      this.edges.splice(i, 1);
+    this.link(link.from, link.to);
   }
 
   return true;
