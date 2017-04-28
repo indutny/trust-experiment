@@ -16,6 +16,8 @@ function Graph(root, options) {
 
   this.child = new Map();
   this.edges = [];
+
+  this._maximizing = false;
 }
 module.exports = Graph;
 
@@ -29,21 +31,29 @@ Graph.prototype._add = function _add(from, to, depth) {
   if (!this.options.maximize && !update)
     return true;
 
-  const matches = [];
-  for (let i = this.edges.length - 1; i >= 0; i--) {
-    const link = this.edges[i];
-    if (link.to !== from)
-      continue;
+  // Prevent recursion
+  if (this._maximizing)
+    return true;
+  this._maximizing = true;
 
-    this.edges.splice(i, 1);
-    matches.push(link);
+  const queue = [ from ];
+  while (queue.length !== 0) {
+    const inserted = queue.pop();
+
+    for (let i = this.edges.length - 1; i >= 0; i--) {
+      const link = this.edges[i];
+      if (link.to !== inserted)
+        continue;
+
+      if (!this._link(link.from, link.to))
+        continue;
+
+      this.edges.splice(i, 1);
+      queue.push(link.from);
+    }
   }
 
-  // Add dangling grand edges if they are present
-  for (let i = 0; i < matches.length; i++) {
-    const link = matches[i];
-    this.link(link.from, link.to);
-  }
+  this._maximizing = false;
 
   return true;
 };
