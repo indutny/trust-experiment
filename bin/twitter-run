@@ -6,7 +6,7 @@ const fs = require('fs');
 const binding = require('bindings')('graph');
 
 const MAX_DEPTH = 3;
-const MAXIMIZE = 50000;
+const MAXIMIZE = 500000;
 
 const Graph = require('../');
 
@@ -58,6 +58,7 @@ function test(to) {
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
 
+    // Add followers for each user
     const range = binding.binarySearch(raw, user);
     if (!range)
       continue;
