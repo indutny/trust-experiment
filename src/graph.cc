@@ -56,8 +56,9 @@ NAN_METHOD(Dedup) {
   unsigned int j = dedup_users(copy, len / 4);
 
   info.GetReturnValue().Set(
-      Nan::NewBuffer(reinterpret_cast<char*>(copy),
-                     j * sizeof(*copy)).ToLocalChecked());
+      Nan::CopyBuffer(reinterpret_cast<char*>(copy),
+                      j * sizeof(*copy)).ToLocalChecked());
+  delete[] copy;
 }
 
 
@@ -137,8 +138,9 @@ NAN_METHOD(BFS) {
   }
 
   info.GetReturnValue().Set(
-      Nan::NewBuffer(reinterpret_cast<char*>(out),
-                     out_count * sizeof(*out)).ToLocalChecked());
+      Nan::CopyBuffer(reinterpret_cast<char*>(out),
+                      out_count * sizeof(*out)).ToLocalChecked());
+  delete[] out;
 }
 
 
