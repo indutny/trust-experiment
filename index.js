@@ -50,12 +50,19 @@ Graph.prototype._add = function _add(from, to, depth) {
   while (queue.length !== 0) {
     const inserted = queue.pop();
 
-    const index = binarySearch(this.edges, inserted, Link.lookup);
+    let index = binarySearch(this.edges, inserted, Link.lookup);
     if (index < 0)
       continue;
 
-    for (let i = index; i < this.edges.length; i++) {
-      const link = this.edges[index];
+    // Find last dangling link
+    for (; index < this.edges.length - 1; index++) {
+      const link = this.edges[index + 1];
+      if (link.to !== inserted)
+        break;
+    }
+
+    for (let i = index; i >= 0; i--) {
+      const link = this.edges[i];
       if (link.to !== inserted)
         break;
 
@@ -64,7 +71,6 @@ Graph.prototype._add = function _add(from, to, depth) {
 
       this.edges.splice(i, 1);
       queue.push(link.from);
-      break;
     }
   }
 
@@ -105,13 +111,20 @@ Graph.prototype.link = function link(from, to) {
   if (this._link(from, to))
     return;
 
-  if (this.options.maximize && this.edges.length < this.options.maximize) {
-    const dangling = new Link(from, to, -1);
-    let index = binarySearch(this.edges, dangling, Link.compare);
-    if (index < 0)
-      index = -1 - index;
-    this.edges.splice(index, 0, dangling);
-  }
+  if (!this.options.maximize)
+    return;
+
+  // Can't have more links than limit
+  // Throwing away some links is not an option, insertion time grows
+  if (this.edges.length >= this.options.maximize)
+    return;
+
+  const dangling = new Link(from, to, -1);
+  let index = binarySearch(this.edges, dangling, Link.compare);
+  if (index < 0)
+    index = -1 - index;
+
+  this.edges.splice(index, 0, dangling);
 };
 
 Graph.prototype.build = function build(from) {

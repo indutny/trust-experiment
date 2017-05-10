@@ -1,58 +1,77 @@
 #!/usr/bin/env node
 'use strict';
 
+const assert = require('assert');
 const fs = require('fs');
+const binding = require('bindings')('graph');
 
-const MAX_DEPTH = 8;
+const MAX_DEPTH = 3;
 const MAXIMIZE = 10000;
 const PER_AUTHOR = 10000;
 
 const Graph = require('../');
 
-const file = fs.readFileSync(process.argv[2]);
-const buf = new Uint32Array(file.length >>> 2);
-for (let i = 0; i < buf.length; i++)
-  buf[i] = file.readUInt32LE(i * 4);
+console.error('Reading file');
+const raw = fs.readFileSync(process.argv[2]);
 
-const users = [];
-{
-  const seen = new Set();
-  for (let i = 0; i < buf.length; i++) {
-    if (seen.has(buf[i]))
-      continue;
+console.error('Deduping');
+const users = binding.dedup(raw);
+console.error('Deduping done');
 
-    seen.add(buf[i]);
-    users.push(buf[i]);
+function shuffle(arr) {
+  for (var i = 0; i < arr.length - 1; i++) {
+    const j = Math.floor(i + Math.random() * (arr.length - i));
+
+    const t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
   }
 }
 
-function shuffle(buf) {
-  const n = buf.length >>> 1;
-  for (var i = 0; i < n - 1; i++) {
-    const j = Math.floor(i + Math.random() * (n - i));
-
-    const t0 = buf[i * 2];
-    const t1 = buf[i * 2 + 1];
-    buf[i * 2] = buf[j * 2];
-    buf[i * 2 + 1] = buf[j * 2 + 1];
-    buf[j * 2] = t0;
-    buf[j * 2 + 1] = t1;
-  }
-}
+const buckets = new Array(MAX_DEPTH + 1).fill(0);
 
 function test(to) {
-  shuffle(buf);
+  console.error('Testing user=%d', to);
+  const bfs = binding.bfs(raw, to, MAX_DEPTH);
+  if (bfs.length === 0) {
+    console.error('Not reachable, skipping');
+    return false;
+  }
 
+  console.error('Got reachable users=%d', bfs.length >> 2);
   const g = new Graph(to, {
     maxDepth: MAX_DEPTH,
     maximize: MAXIMIZE
   });
 
-  for (var i = 0; i < buf.length; i += 2)
-    g.link(buf[i + 1], buf[i]);
+  const links = [];
+  const users = [];
+  for (let i = 0; i < bfs.length; i += 4) {
+    const user = bfs.readUInt32LE(i);
+    users.push(user);
+  }
+  shuffle(users);
 
-  for (var i = 0; i < PER_AUTHOR; i++) {
-    const from = users[(Math.random() * users.length) | 0];
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+
+    const range = binding.binarySearch(raw, user);
+    if (!range)
+      continue;
+
+    const end = range[1];
+    for (let off = range[0]; off < end; off += 8) {
+      assert(user === raw.readUInt32LE(off));
+      const follower = raw.readUInt32LE(off + 4);
+
+      g.link(follower, user);
+    }
+  }
+  console.error(g.edges.length);
+
+  console.error('Got links');
+  for (var i = 0; i < bfs.length; i += 4) {
+    const from = bfs.readUInt32LE(i);
     if (from === to)
       continue;
 
@@ -60,13 +79,14 @@ function test(to) {
     const length = route ? route.length : 0;
     buckets[length]++;
   }
+
+  return true;
 }
 
-const buckets = new Array(MAX_DEPTH + 1).fill(0);
-
 for (;;) {
-  const to = users[(Math.random() * users.length) | 0];
+  const to = users.readUInt32LE(((Math.random() * users.length) >>> 2) << 2);
 
-  const route = test(to);
+  if (!test(to))
+    continue;
   console.log(buckets.join(', '));
 }

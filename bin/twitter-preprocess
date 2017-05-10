@@ -2,6 +2,7 @@
 'use strict';
 
 const split = require('split');
+const graph = require('bindings')('graph');
 
 const data = [];
 
@@ -16,9 +17,10 @@ process.stdin.pipe(split()).on('data', (line) => {
   data.push(user, follower);
 }).on('end', () => {
   const buf = Buffer.alloc(data.length * 4);
-  for (var i = 0; i < data.length; i++) {
+  for (var i = 0; i < data.length; i++)
     buf.writeUInt32LE(data[i], i * 4);
-  }
+
+  graph.sort(buf);
 
   process.stdout.write(buf);
 });
