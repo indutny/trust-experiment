@@ -3,10 +3,10 @@
 const Graph = require('../');
 
 const g = new Graph(0, {
-  maximize: 1000
+  maximize: 200000
 });
 
-const COUNT = 1e7;
+const COUNT = 3e5;
 
 const start = process.hrtime();
 for (var i = 0; i < COUNT; i++)
