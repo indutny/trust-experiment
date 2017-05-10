@@ -131,8 +131,11 @@ NAN_METHOD(BFS) {
         if (user != curr)
           break;
 
+        assert(out_count < 2 * count);
         out[out_count++] = follower;
       }
+
+      out_count = off + dedup_users(out + off, out_count - off);
     }
     out_count = dedup_users(out, out_count);
   }
