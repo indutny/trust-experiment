@@ -107,7 +107,8 @@ NAN_METHOD(BFS) {
 
   assert(count > 0);
   assert(max_depth > 0);
-  uint32_t* out = new uint32_t[2 * count];
+  size_t out_max = 2 * count;
+  uint32_t* out = new uint32_t[out_max];
   size_t out_count = 1;
 
   out[0] = to;
@@ -133,13 +134,14 @@ NAN_METHOD(BFS) {
 
         assert(out_count < 2 * count);
         out[out_count++] = follower;
+
+        if (out_count != out_max)
+          continue;
+
+        /* Deduplicate to prevent overflow */
+        out_count = count_copy + dedup_users(out + count_copy,
+                                             out_count - count_copy);
       }
-
-      if (out_count == count_copy)
-        continue;
-
-      out_count = count_copy + dedup_users(out + count_copy,
-                                           out_count - count_copy);
     }
     out_count = dedup_users(out, out_count);
   }
