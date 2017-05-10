@@ -67,7 +67,6 @@ function test(to) {
       g.link(follower, user);
     }
   }
-  console.error(g.edges.length);
 
   console.error('Got links');
   for (var i = 0; i < bfs.length; i += 4) {

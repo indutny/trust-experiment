@@ -25,7 +25,8 @@ function Graph(root, options) {
   this.root = root;
 
   this.child = new Map();
-  this.edges = [];
+  this._edges = new Map();
+  this._edgeCount = 0;
 
   this._maximizing = false;
 }
@@ -50,26 +51,18 @@ Graph.prototype._add = function _add(from, to, depth) {
   while (queue.length !== 0) {
     const inserted = queue.pop();
 
-    let index = binarySearch(this.edges, inserted, Link.lookup);
-    if (index < 0)
+    const list = this._edges.get(inserted);
+    if (!list)
       continue;
 
-    // Find last dangling link
-    for (; index < this.edges.length - 1; index++) {
-      const link = this.edges[index + 1];
-      if (link.to !== inserted)
-        break;
-    }
-
-    for (let i = index; i >= 0; i--) {
-      const link = this.edges[i];
-      if (link.to !== inserted)
-        break;
-
+    for (let i = list.length - 1; i >= 0; i--) {
+      const link = list[i];
       if (!this._link(link.from, link.to))
         continue;
 
-      this.edges.splice(i, 1);
+      list.splice(i, 1);
+      this._edgeCount--;
+
       queue.push(link.from);
     }
   }
@@ -115,16 +108,31 @@ Graph.prototype.link = function link(from, to) {
     return;
 
   // Can't have more links than limit
-  // Throwing away some links is not an option, insertion time grows
-  if (this.edges.length >= this.options.maximize)
-    return;
+  if (this._edgeCount >= this.options.maximize) {
+    // Throw away "random" edge
+    const keys = Array.from(this._edges.keys());
+    const index = (Math.random() * (keys.length + 1)) >>> 0;
+
+    // With a chance to not throw away
+    if (index >= keys.length)
+      return;
+
+    const key = keys[index];
+    const list = this._edges.get(key);
+    list.shift();
+  }
 
   const dangling = new Link(from, to, -1);
-  let index = binarySearch(this.edges, dangling, Link.compare);
-  if (index < 0)
-    index = -1 - index;
+  let list;
+  if (this._edges.has(to)) {
+    list = this._edges.get(to);
+  } else {
+    list = [];
+    this._edges.set(to, list);
+  }
 
-  this.edges.splice(index, 0, dangling);
+  list.push(dangling);
+  this._edgeCount++;
 };
 
 Graph.prototype.build = function build(from) {
