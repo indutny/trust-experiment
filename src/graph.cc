@@ -135,7 +135,11 @@ NAN_METHOD(BFS) {
         out[out_count++] = follower;
       }
 
-      out_count = off + dedup_users(out + off, out_count - off);
+      if (out_count == count_copy)
+        continue;
+
+      out_count = count_copy + dedup_users(out + count_copy,
+                                           out_count - count_copy);
     }
     out_count = dedup_users(out, out_count);
   }
