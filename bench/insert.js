@@ -6,7 +6,7 @@ const g = new Graph(0, {
   maximize: 1000
 });
 
-const COUNT = 1e9;
+const COUNT = 1e7;
 
 const start = process.hrtime();
 for (var i = 0; i < COUNT; i++)
