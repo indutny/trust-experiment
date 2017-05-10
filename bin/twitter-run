@@ -49,8 +49,8 @@ function test(to) {
 
   const links = [];
   const users = [];
-  for (let i = 0; i < bfs.length; i += 4) {
-    const user = bfs.readUInt32LE(i);
+  for (let i = 0; i < sbfs.length; i += 4) {
+    const user = sbfs.readUInt32LE(i);
     users.push(user);
   }
   shuffle(users);
@@ -72,8 +72,8 @@ function test(to) {
   }
 
   console.error('Got links');
-  for (var i = 0; i < sbfs.length; i += 4) {
-    const from = sbfs.readUInt32LE(i);
+  for (var i = 0; i < bfs.length; i += 4) {
+    const from = bfs.readUInt32LE(i);
     if (from === to)
       continue;
 
