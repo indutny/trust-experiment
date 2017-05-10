@@ -38,6 +38,10 @@ function test(to) {
   }
 
   console.error('Got reachable users=%d', bfs.length >> 2);
+
+  const sbfs = binding.bfs(raw, to, MAX_DEPTH - 1);
+  console.error('Got closer reachable users=%d', sbfs.length >> 2);
+
   const g = new Graph(to, {
     maxDepth: MAX_DEPTH,
     maximize: MAXIMIZE
@@ -68,8 +72,8 @@ function test(to) {
   }
 
   console.error('Got links');
-  for (var i = 0; i < bfs.length; i += 4) {
-    const from = bfs.readUInt32LE(i);
+  for (var i = 0; i < sbfs.length; i += 4) {
+    const from = sbfs.readUInt32LE(i);
     if (from === to)
       continue;
 
