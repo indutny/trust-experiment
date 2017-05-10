@@ -26,6 +26,7 @@ function Graph(root, options) {
 
   this.child = new Map();
   this._edges = new Map();
+  this._edgeKeys = [];
   this._edgeCount = 0;
 
   this._maximizing = false;
@@ -65,6 +66,14 @@ Graph.prototype._add = function _add(from, to, depth) {
 
       queue.push(link.from);
     }
+
+    if (list.length !== 0)
+      continue;
+
+    this._edges.delete(inserted);
+    const index = this._edgeKeys.indexOf(inserted);
+    if (index !== -1)
+      this._edgeKeys.splice(index, 1);
   }
 
   this._maximizing = false;
@@ -110,7 +119,7 @@ Graph.prototype.link = function link(from, to) {
   // Can't have more links than limit
   if (this._edgeCount >= this.options.maximize) {
     // Throw away "random" edge
-    const keys = Array.from(this._edges.keys());
+    const keys = this._edgeKeys;
     const index = (Math.random() * (keys.length + 1)) >>> 0;
 
     // With a chance to not throw away
@@ -120,6 +129,10 @@ Graph.prototype.link = function link(from, to) {
     const key = keys[index];
     const list = this._edges.get(key);
     list.shift();
+    if (list.length === 0) {
+      this._edges.delete(key);
+      this._edgeKeys.splice(index, 1);
+    }
   }
 
   const dangling = new Link(from, to, -1);
@@ -129,6 +142,7 @@ Graph.prototype.link = function link(from, to) {
   } else {
     list = [];
     this._edges.set(to, list);
+    this._edgeKeys.push(to);
   }
 
   list.push(dangling);
